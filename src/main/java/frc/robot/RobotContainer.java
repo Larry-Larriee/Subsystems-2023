@@ -28,10 +28,12 @@ public class RobotContainer {
     configureBindings();
 
     // Set commands to the XBOX controller
+    // Setting one liner command directly from robot container instead of habving to make a controller.java file
     m_Drivebase.setDefaultCommand(
-      //new (m_Drivebase.ArcadeDrive(m_driverController.getLeftY(), m_driverController.getRightX())));
       Commands.run(
-        () -> m_Drivebase.ArcadeDrive(-m_driverController.getLeftY(), -m_driverController.getRightX()), m_Drivebase));
+        () -> m_Drivebase.ArcadeDrive(m_driverController.getLeftY(), m_driverController.getRightX()), 
+          m_Drivebase)
+      );
   }
   
   private void configureBindings() {
