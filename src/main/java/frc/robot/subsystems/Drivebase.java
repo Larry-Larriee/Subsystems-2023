@@ -1,24 +1,33 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+// Import motors and arcade drive library
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
+// Import GYRO library
 import com.kauailabs.navx.frc.AHRS;
 
 public class Drivebase extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
-  public Drivebase() {}
+  public Drivebase() {
+
+    // Invert right motors because they are on the opposite side
+    m_RightMotorOne.setInverted(true);
+    m_RightMotorTwo.setInverted(true);
+    m_RightMotorThr.setInverted(true);
+
+    // Calibrate GYRO to reset the axis to zero
+    m_Gyro.calibrate();
+  }
 
   // Initialize motors
+  // Motor one is the master; Motors two and three are slaves
   CANSparkMax m_LeftMotorOne = new CANSparkMax(1, MotorType.kBrushed);
   CANSparkMax m_LeftMotorTwo = new CANSparkMax(2, MotorType.kBrushed);
   CANSparkMax m_LeftMotorThr = new CANSparkMax(3, MotorType.kBrushed);
@@ -30,11 +39,10 @@ public class Drivebase extends SubsystemBase {
   // Sort Motors to run together
   MotorControllerGroup m_LeftMotors = new MotorControllerGroup(m_LeftMotorOne, m_LeftMotorTwo, m_LeftMotorThr);
   MotorControllerGroup m_RightMotors = new MotorControllerGroup(m_RightMotorOne, m_RightMotorTwo, m_RightMotorThr);
-
   DifferentialDrive m_DifferentialDrive = new DifferentialDrive(m_LeftMotors, m_RightMotors);
 
-  // Initialize GYRO
-  AHRS m_Gyro = new AHRS();
+  // Initialize GYRO and set to robot port
+  AHRS m_Gyro = new AHRS(edu.wpi.first.wpilibj.SerialPort.Port.kMXP);
 
   // Initialize ArcadeDrive
   public void ArcadeDrive(double xSpeed, double yDirection){
@@ -45,11 +53,12 @@ public class Drivebase extends SubsystemBase {
     return m_Gyro.getAngle();
   }
 
-  public CommandBase moveForward() {
-    return run(
+  public CommandBase move(double xSpeed, double yDirection) {
+    return runOnce(
         () -> {
           
-          ArcadeDrive(1, 0);
+          // Move the robot based on controller input
+          ArcadeDrive(xSpeed, yDirection);
 
         });
   }
@@ -71,10 +80,15 @@ public class Drivebase extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+
+    // Constantly get the angle of the robot
+    SmartDashboard.putNumber("Gyro Angle", getAngle());
   }
 
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
+
+    
   }
 }
