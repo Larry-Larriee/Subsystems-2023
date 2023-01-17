@@ -4,18 +4,19 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 // IMPORTS ======================================================================================================================= 
-import frc.robot.subsystems.Drivebase;
 
+// Import drivebase and elevator subsystems
+import frc.robot.subsystems.Drivebase;
+import frc.robot.subsystems.Elevator;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final Drivebase m_db = new Drivebase();
+  private final Drivebase m_Drivebase = new Drivebase();
+  private final Elevator m_Elevator = new Elevator();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
@@ -24,35 +25,31 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+
+    // Set commands to the XBOX controller for free movement
+    m_Drivebase.setDefaultCommand(
+      Commands.run(
+        () -> m_Drivebase.moveRobot(m_driverController.getLeftY(), m_driverController.getRightX()), 
+          m_Drivebase)
+      );
   }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
+    
+    // Create a command that set the elevator to the max height up when the y button is pressed/toggled.
+    m_driverController.y().whileTrue(m_Elevator.desiredElevatorHeight(1000));
 
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    // Create a command that set the elevator at the middle(h = 500) when the x button is pressed/toggled.
+    m_driverController.x().whileTrue(m_Elevator.desiredElevatorHeight(500));
+
+    // Create a command that set the elevator at the minimum height when the b button is pressed/toggled.
+    m_driverController.b().whileTrue(m_Elevator.desiredElevatorHeight(0));
   }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
   public Command getAutonomousCommand() {
     
     // Move autonomously by plugging in the drivebase subsystem object as an argument
-    return Autos.moveAuto(m_db);
+    // This makes the robot move forward automatically for 3 seconds
+    return Autos.moveAuto(m_Drivebase);
   }
 }
